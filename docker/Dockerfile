@@ -2,13 +2,17 @@ FROM golang:1.21-bookworm AS builder
 
 WORKDIR /
 
+ARG github_token
+
+ENV GITHUB_TOKEN=${github_token} 
+
 # Install jq for JSON manipulation in the config file
 RUN apt update && apt install -y jq
 
 # Kubo build process
 # See details: https://github.com/ipfs/go-ds-s3
 ENV GO111MODULE on
-ENV GOPROXY direct
+# ENV GOPROXY direct
 
 # We clone Kubo source code.
 RUN git clone https://github.com/ipfs/kubo
@@ -18,8 +22,8 @@ ENV SRC_DIR /kubo
 WORKDIR $SRC_DIR
 
 # Install the plugin and build ipfs
-RUN go get github.com/ipfs/go-ds-s3@latest
-RUN echo "\ns3ds github.com/ipfs/go-ds-s3/plugin 0" >> plugin/loader/preload_list
+RUN go get github.com/sweet-io-org/go-ds-s3@latest
+RUN echo "\ns3ds github.com/sweet-io-org/go-ds-s3/plugin 0" >> plugin/loader/preload_list
 RUN make build || : #first build will fail
 RUN go mod tidy
 RUN make build
