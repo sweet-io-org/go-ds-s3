@@ -1,4 +1,4 @@
-module github.com/ipfs/go-ds-s3
+module github.com/sweet-io-org/go-ds-s3
 
 go 1.20
 
