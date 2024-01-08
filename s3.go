@@ -70,19 +70,30 @@ func NewS3Datastore(conf Config) (*S3Bucket, error) {
 	}
 
 	d := defaults.Get()
-	creds := credentials.NewChainCredentials([]credentials.Provider{
-		&credentials.StaticProvider{Value: credentials.Value{
-			AccessKeyID:     conf.AccessKey,
-			SecretAccessKey: conf.SecretKey,
-			SessionToken:    conf.SessionToken,
-		}},
-		&credentials.EnvProvider{},
-		&credentials.SharedCredentialsProvider{},
-		&ec2rolecreds.EC2RoleProvider{Client: ec2metadata.New(sess)},
-		endpointcreds.NewProviderClient(*d.Config, d.Handlers, conf.CredentialsEndpoint,
-			func(p *endpointcreds.Provider) { p.ExpiryWindow = credsRefreshWindow },
-		),
-	})
+	if conf.AccessKey == "" {
+        creds := credentials.NewChainCredentials([]credentials.Provider{
+                    &credentials.EnvProvider{},
+                    &credentials.SharedCredentialsProvider{},
+                    &ec2rolecreds.EC2RoleProvider{Client: ec2metadata.New(sess)},
+                    endpointcreds.NewProviderClient(*d.Config, d.Handlers, conf.CredentialsEndpoint,
+                        func(p *endpointcreds.Provider) { p.ExpiryWindow = credsRefreshWindow },
+                    ),
+                })
+	} else {
+        creds := credentials.NewChainCredentials([]credentials.Provider{
+            &credentials.StaticProvider{Value: credentials.Value{
+                AccessKeyID:     conf.AccessKey,
+                SecretAccessKey: conf.SecretKey,
+                SessionToken:    conf.SessionToken,
+            }},
+            &credentials.EnvProvider{},
+            &credentials.SharedCredentialsProvider{},
+            &ec2rolecreds.EC2RoleProvider{Client: ec2metadata.New(sess)},
+            endpointcreds.NewProviderClient(*d.Config, d.Handlers, conf.CredentialsEndpoint,
+                func(p *endpointcreds.Provider) { p.ExpiryWindow = credsRefreshWindow },
+            ),
+        })
+	}
 
 	if conf.RegionEndpoint != "" {
 		awsConfig.WithS3ForcePathStyle(true)
