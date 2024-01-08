@@ -70,6 +70,9 @@ func NewS3Datastore(conf Config) (*S3Bucket, error) {
 	}
 
 	d := defaults.Get()
+
+	var creds credentials.Credentials
+
 	if conf.AccessKey == "" {
         creds := credentials.NewChainCredentials([]credentials.Provider{
                     &credentials.EnvProvider{},
