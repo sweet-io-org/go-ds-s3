@@ -18,7 +18,8 @@ jq ".Datastore.Spec = {
             bucket: \"${CLUSTER_S3_BUCKET}\",
             rootDirectory: \"${CLUSTER_PEERNAME}\",
             accessKey: \"${CLUSTER_AWS_KEY}\",
-            secretKey: \"${CLUSTER_AWS_SECRET}\"
+            secretKey: \"${CLUSTER_AWS_SECRET}\",
+            sessionToken: \"${CLUSTER_AWS_SESSION_TOKEN}\"
           },
           mountpoint: \"/blocks\",
           prefix: \"s3.datastore\",

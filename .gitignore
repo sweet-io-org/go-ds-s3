@@ -1,3 +1,4 @@
 kubo/
 go-ds-s3-plugin/go-ds-s3-plugin
 .idea
+**.DS_store
