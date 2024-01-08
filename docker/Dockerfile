@@ -51,4 +51,4 @@ COPY --from=builder /usr/lib/*-linux-*/libdl.so.2 /usr/lib/
 RUN find / -name "libdl.so*"
 
 # init.d script IPFS runs before starting the daemon. Used to manipulate the IPFS config file.
-COPY 001-config.sh /container-init.d/001-config.sh
+COPY docker/001-config.sh /container-init.d/001-config.sh
