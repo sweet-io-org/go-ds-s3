@@ -71,10 +71,10 @@ func NewS3Datastore(conf Config) (*S3Bucket, error) {
 
 	d := defaults.Get()
 
-	var creds credentials.Credentials
+	var creds *credentials.Credentials
 
 	if conf.AccessKey == "" {
-        creds := credentials.NewChainCredentials([]credentials.Provider{
+        creds = credentials.NewChainCredentials([]credentials.Provider{
                     &credentials.EnvProvider{},
                     &credentials.SharedCredentialsProvider{},
                     &ec2rolecreds.EC2RoleProvider{Client: ec2metadata.New(sess)},
@@ -83,7 +83,7 @@ func NewS3Datastore(conf Config) (*S3Bucket, error) {
                     ),
                 })
 	} else {
-        creds := credentials.NewChainCredentials([]credentials.Provider{
+        creds = credentials.NewChainCredentials([]credentials.Provider{
             &credentials.StaticProvider{Value: credentials.Value{
                 AccessKeyID:     conf.AccessKey,
                 SecretAccessKey: conf.SecretKey,
