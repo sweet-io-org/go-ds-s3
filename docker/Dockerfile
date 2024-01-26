@@ -32,7 +32,7 @@ RUN make install
 RUN find / -name "libdl.so*"
 
 # The actual IPFS image we will use
-FROM ipfs/kubo:v0.23.0
+FROM ipfs/kubo:v0.25.0
 ENV SRC_DIR /kubo
 
 # We copy the new binaries we built in the 'builder' stage (--from=builder)
