@@ -6,27 +6,29 @@ phases:
       - curl -s -O -L  https://$GITHUB_TOKEN@raw.githubusercontent.com/sweet-io/devops-tools-and-scripts/master/ci/cd/codebuild-git-wrapper.sh
       - chmod +x codebuild-git-wrapper.sh
       - ./codebuild-git-wrapper.sh $DEPLOY_BRANCH
-      - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - COMMIT_TAG=$(git tag -l --points-at $CODEBUILD_RESOLVED_SOURCE_VERSION)
       - IMAGE_TAG=$(if [[ $STAGE == "production" ]]; then echo ""; else echo $STAGE-; fi)$(if [ $COMMIT_TAG ]; then echo $COMMIT_TAG-; else echo ""; fi)${COMMIT_HASH:=latest}
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+      - echo "Logging in to Docker Hub..."
+      - docker login --username sweetio -p ${DOCKER_HUB_TOKEN}
+      - echo "Pulling latest from $REPOSITORY_URI"
+      - docker pull $REPOSITORY_URI:latest || true
   build:
     commands:
-      - echo Building the Docker image...
-      - docker login --username sweetio -p $DOCKER_HUB_TOKEN
-      - docker pull $ECR_URL:latest || true
-      - docker build -t $ECR_URL:latest
-        --build-arg github_token="$GITHUB_TOKEN" 
+      - echo "Build started at `date`"
+      - echo "Building the Docker image..."
+      - docker build -t $REPOSITORY_URI:latest
         -f docker/Dockerfile .
-      - docker tag $ECR_URL:latest $ECR_URL:$IMAGE_TAG
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker images...
-      - docker push $ECR_URL:$IMAGE_TAG
-      - docker push $ECR_URL:latest
-      - echo Writing image definitions
-      - printf '[{"name":"ipfskubo","imageUri":"%s"}]' "$ECR_URL:$IMAGE_TAG" | tee imagedefinitions.json
+      - echo "Build completed at `date`"
+      - echo "Pushing the Docker images..."
+      - docker push -a $REPOSITORY_URI
+      - echo "Writing image definitions file..."
+      - printf '[{"name":"ipfskubo","imageUri":"%s"}]' "$REPOSITORY_URI:$IMAGE_TAG" | tee imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
